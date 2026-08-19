@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>I.E.S. Marina Cebrián - Biblioteca Escolar</title>
+  
+  <!-- PWA & Mobile Web App Meta -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ea580c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="BiblioMarinaCebrian">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" href="ies-marina-cebrian.png">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c'
+            },
+            wood: {
+              100: '#fef3c7',
+              800: '#78350f',
+              900: '#451a03',
+              950: '#291307'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- FontAwesome Icons & HTML5-QRCode Barcode Scanner Library -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-[#faf5ee] text-[#291307] min-h-screen">
+
+  <!-- APP CONTAINER -->
+  <div id="app" class="max-w-md md:max-w-4xl mx-auto px-4 py-4 min-h-screen flex flex-col">
+    
+    <!-- HEADER BAR -->
+    <header class="glass-panel p-3.5 mb-4 flex items-center justify-between shadow-md sticky top-2 z-30 border-orange-500/20 bg-white/95">
+      <div class="flex items-center gap-3">
+        <!-- OFFICIAL LOGO -->
+        <img src="ies-marina-cebrian.png" alt="Logo I.E.S. Marina Cebrián" class="w-12 h-12 rounded-xl object-cover shadow-md border border-orange-500/30 bg-white">
+        <div>
+          <h1 class="font-extrabold text-base sm:text-lg leading-tight tracking-tight text-[#291307] flex items-center gap-2">
+            I.E.S. Marina Cebrián
+            <span class="text-[10px] uppercase font-extrabold tracking-wider bg-orange-100 text-orange-700 px-2.5 py-0.5 rounded-full border border-orange-300">Biblioteca</span>
+          </h1>
+          <p class="text-xs text-[#78350f] font-medium">Catálogo y Gestión de Lotes de Libros</p>
+        </div>
+      </div>
+
+      <!-- Role Pill & Sync Status -->
+      <div class="flex items-center gap-2">
+        <button id="btn-admin-toggle" onclick="handleAdminToggleClick()" title="Acceso Administrador (Gestión)" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-50 border border-amber-200 text-[#78350f] hover:border-orange-500 hover:text-orange-700 transition-all shadow-sm">
+          <i id="admin-icon" class="fa-solid fa-lock text-orange-600"></i>
+          <span id="admin-toggle-text">Gestión</span>
+        </button>
+
+        <button id="status-pill" onclick="openConfigModal()" title="Configuración de Google Sheets" class="hidden flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 border border-amber-200 text-[#78350f] hover:border-orange-500 transition-all">
+          <span id="sync-dot" class="w-2 h-2 rounded-full bg-amber-500"></span>
+          <span id="sync-text">Modo Local</span>
+          <i class="fa-solid fa-gear text-[#78350f]/70 text-xs ml-1"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- STATS SUMMARY BAR -->
+    <section class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
+      <div class="glass-panel p-3.5 flex items-center justify-between border-l-4 border-l-orange-500 bg-white">
+        <div>
+          <p class="text-xs text-[#78350f] font-semibold">Lotes / Títulos</p>
+          <p id="stat-total-titles" class="text-2xl font-extrabold text-[#291307]">0</p>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+          <i class="fa-solid fa-layer-group text-base"></i>
+        </div>
+      </div>
+
+      <div class="glass-panel p-3.5 flex items-center justify-between border-l-4 border-l-amber-500 bg-white">
+        <div>
+          <p class="text-xs text-[#78350f] font-semibold">Total Ejemplares</p>
+          <p id="stat-total-copies" class="text-2xl font-extrabold text-amber-700">0</p>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+          <i class="fa-solid fa-books text-base"></i>
+        </div>
+      </div>
+
+      <div class="glass-panel p-3.5 col-span-2 md:col-span-1 flex items-center justify-between border-l-4 border-l-emerald-500 bg-white">
+        <div>
+          <p class="text-xs text-[#78350f] font-semibold">Última Sincro</p>
+          <p id="stat-last-sync" class="text-xs font-bold text-emerald-700 mt-1">Hoy</p>
+        </div>
+        <button onclick="fetchBooksFromSheet()" class="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors" title="Sincronizar ahora">
+          <i class="fa-solid fa-rotate text-sm"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- ADMIN ONLY: SCANNER & MANUAL SEARCH SECTION -->
+    <section id="admin-actions-section" class="hidden glass-panel p-4 mb-6 relative overflow-hidden shadow-md bg-white border-orange-300">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-bold text-orange-700 uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-user-shield text-orange-600"></i> Gestión de Administrador: Registrar lote
+        </h2>
+        <span class="text-[10px] bg-orange-100 text-orange-800 px-2.5 py-0.5 rounded font-mono border border-orange-200">PIN: 1234</span>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <!-- BARCODE SCANNER BUTTON -->
+        <button id="btn-open-scanner" onclick="startScannerModal()" class="w-full sm:w-1/2 py-3.5 px-4 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-extrabold rounded-xl shadow-md flex items-center justify-center gap-3 transition-all active:scale-[0.98]">
+          <i class="fa-solid fa-camera text-xl animate-pulse"></i>
+          <span class="text-sm">Escanear Cámara (ISBN)</span>
+        </button>
+
+        <!-- MANUAL ISBN INPUT & SUBMIT -->
+        <form id="isbn-form" onsubmit="handleManualIsbnSubmit(event)" class="w-full sm:w-1/2 flex gap-2">
+          <div class="relative flex-1">
+            <input type="text" id="manual-isbn-input" placeholder="Escribir ISBN (ej. 9788466332910)..." pattern="[0-9X\- ]*" autocomplete="off" class="w-full h-full py-3 pl-3.5 pr-8 bg-amber-50/50 border border-amber-200 rounded-xl text-[#291307] placeholder-amber-900/40 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all">
+            <button type="button" onclick="document.getElementById('manual-isbn-input').value=''" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-800/40 hover:text-amber-900 text-xs">
+              <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+          </div>
+          <button type="submit" class="px-4 py-3 bg-amber-100 hover:bg-amber-200 border border-amber-300 text-orange-700 font-bold rounded-xl flex items-center justify-center shadow-sm transition-colors" title="Buscar ISBN">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+        </form>
+      </div>
+
+      <div class="mt-3 flex items-center justify-between text-xs text-[#78350f]/80">
+        <span><i class="fa-solid fa-circle-info text-orange-600 mr-1"></i> Consulta asíncrona en Google Books y Open Library</span>
+      </div>
+    </section>
+
+    <!-- SEARCH & FILTER CATALOG TOOLBAR -->
+    <section class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4">
+      <div class="relative flex-1">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-900/40 text-sm"></i>
+        <input type="text" id="catalog-search-input" oninput="filterCatalog()" placeholder="Buscar en el catálogo por título o autor..." class="w-full py-2.5 pl-10 pr-4 bg-white border border-amber-200 rounded-xl text-[#291307] placeholder-amber-900/40 text-sm focus:outline-none focus:border-orange-500 shadow-sm">
+      </div>
+
+      <div class="flex items-center gap-2">
+        <select id="filter-sort-select" onchange="filterCatalog()" class="py-2.5 px-3 bg-white border border-amber-200 text-[#291307] font-medium rounded-xl text-xs focus:outline-none focus:border-orange-500 shadow-sm">
+          <option value="recent">Más recientes</option>
+          <option value="copies-desc">Mayor nº ejemplares</option>
+          <option value="title-asc">Título (A-Z)</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- BOOK LOTS CATALOG GRID -->
+    <main class="flex-1">
+      <div id="catalog-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <!-- Book cards rendered dynamically here -->
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div id="catalog-empty" class="hidden glass-panel p-8 text-center my-8 bg-white">
+        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-2xl">
+          <i class="fa-solid fa-book-open text-3xl"></i>
+        </div>
+        <h3 class="text-base font-bold text-[#291307]">No se encontraron lotes de libros</h3>
+        <p class="text-xs text-[#78350f] mt-1 max-w-sm mx-auto">Prueba a buscar con otro término o solicita a un administrador que agregue nuevos lotes.</p>
+      </div>
+    </main>
+
+  </div> <!-- /APP CONTAINER -->
+
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- 1. CAMERA BARCODE SCANNER MODAL -->
+  <div id="modal-scanner" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="modal-content glass-panel w-full max-w-md p-5 bg-white border border-amber-200 shadow-2xl rounded-2xl relative text-[#291307]">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-base text-[#291307] flex items-center gap-2">
+          <i class="fa-solid fa-camera text-orange-600"></i> Escáner de Código de Barras
+        </h3>
+        <button onclick="stopScannerModal()" class="w-8 h-8 rounded-full bg-amber-100 text-[#78350f] hover:text-black flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- SCANNER VIEWFINDER CONTAINER -->
+      <div id="scanner-container" class="relative w-full aspect-square rounded-xl bg-black border-2 border-orange-500 flex flex-col items-center justify-center overflow-hidden">
+        <div id="reader" class="w-full h-full"></div>
+        <div class="scanner-laser-line"></div>
+        <div class="scanner-frame-corner corner-tl"></div>
+        <div class="scanner-frame-corner corner-tr"></div>
+        <div class="scanner-frame-corner corner-bl"></div>
+        <div class="scanner-frame-corner corner-br"></div>
+      </div>
+
+      <p class="text-xs text-center text-[#78350f] mt-3 font-medium">Apunta la cámara al código de barras ISBN del libro</p>
+
+      <div class="mt-4 flex gap-2">
+        <button onclick="stopScannerModal()" class="w-full py-2.5 bg-amber-100 hover:bg-amber-200 text-[#78350f] font-bold rounded-xl text-xs">
+          Cerrar Cámara
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 2. BOOK DETAILS PREVIEW & CONFIRMATION MODAL (ADMIN ADDING) -->
+  <div id="modal-preview" class="fixed inset-0 z-50 hidden modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="modal-content glass-panel w-full max-w-lg p-5 bg-white border border-amber-200 shadow-2xl rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto relative text-[#291307]">
+      
+      <!-- LOADING STATE SKELETON -->
+      <div id="preview-loading" class="py-12 flex flex-col items-center justify-center text-center">
+        <div class="w-14 h-14 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <h4 class="text-base font-bold text-[#291307]">Consultando apis de libros...</h4>
+        <p class="text-xs text-[#78350f] mt-1">Google Books API & Open Library API</p>
+      </div>
+
+      <!-- CONTENT BODY (Hidden during loading) -->
+      <div id="preview-body" class="hidden">
+        <div class="flex items-start justify-between border-b border-amber-200 pb-3 mb-4">
+          <span id="preview-isbn-badge" class="px-2.5 py-1 rounded-md bg-orange-100 text-orange-700 text-xs font-mono font-bold border border-orange-300">
+            ISBN: ---
+          </span>
+          <button onclick="closePreviewModal()" class="w-8 h-8 rounded-full bg-amber-100 text-[#78350f] hover:text-black flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- BOOK COVER & METADATA GRID -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-4">
+          <div class="w-32 h-48 mx-auto sm:mx-0 flex-shrink-0 rounded-lg overflow-hidden bg-amber-100 shadow-md border border-amber-200 relative">
+            <img id="preview-cover-img" src="default-cover.png" alt="Portada del libro" class="w-full h-full object-cover">
+          </div>
+
+          <div class="flex-1 flex flex-col justify-between">
+            <div>
+              <h3 id="preview-title" class="font-black text-lg text-[#291307] leading-tight mb-2">---</h3>
+              
+              <div class="mb-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-orange-700">Autor:</span>
+                <p id="preview-author" class="text-xs font-bold text-[#78350f]">---</p>
+              </div>
+            </div>
+            
+            <!-- SYNOPSIS PREVIEW -->
+            <div class="bg-amber-50/70 p-2.5 rounded-lg border border-amber-200 text-xs text-[#291307] max-h-28 overflow-y-auto">
+              <p class="font-bold text-[#78350f] mb-0.5 text-[10px] uppercase tracking-wider">Sinopsis:</p>
+              <p id="preview-synopsis" class="italic">No hay sinopsis disponible.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- DUPLICATE / GOOGLE SHEET MATCH ALERT BANNER -->
+        <div id="preview-match-banner" class="p-3 rounded-xl mb-4 border flex items-center gap-3">
+          <i id="preview-match-icon" class="fa-solid fa-circle-info text-lg"></i>
+          <div class="text-xs">
+            <p id="preview-match-headline" class="font-bold">Comprobando existencias en Google Sheets...</p>
+            <p id="preview-match-subtext" class="text-[#78350f]">Un momento por favor.</p>
+          </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="flex gap-3">
+          <button onclick="closePreviewModal()" class="w-1/3 py-3 bg-amber-100 hover:bg-amber-200 text-[#78350f] font-bold rounded-xl text-xs transition-colors">
+            Cancelar
+          </button>
+          <button id="btn-confirm-save" onclick="confirmSaveBook()" class="w-2/3 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-extrabold rounded-xl text-xs shadow-md flex items-center justify-center gap-2 transition-all">
+            <i class="fa-solid fa-check"></i> Confirmar y Registrar
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- 3. PUBLIC CLEAN DETAIL VIEW MODAL (PESTAÑA LIMPIA DE CONSULTA) -->
+  <div id="modal-detail" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="modal-content glass-panel w-full max-w-lg p-5 bg-white border border-amber-200 shadow-2xl rounded-2xl relative text-[#291307]">
+      
+      <!-- TOP BAR -->
+      <div class="flex items-center justify-between mb-4 border-b border-amber-200 pb-3">
+        <span id="detail-isbn" class="text-xs font-mono bg-amber-100 text-orange-800 px-2.5 py-1 rounded-md border border-amber-300 font-bold">ISBN: ---</span>
+        <button onclick="closeDetailModal()" class="w-8 h-8 rounded-full bg-amber-100 text-[#78350f] hover:text-black flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- MAIN BOOK DETAILS FLEX -->
+      <div class="flex flex-col sm:flex-row gap-5 mb-5">
+        <!-- COVER IMAGE -->
+        <div class="w-36 h-52 mx-auto sm:mx-0 flex-shrink-0 rounded-xl overflow-hidden bg-amber-50 shadow-md border border-amber-200 relative">
+          <img id="detail-cover" src="default-cover.png" alt="Portada del libro" class="w-full h-full object-cover">
+        </div>
+
+        <!-- DETAILS CONTENT BLOCK -->
+        <div class="flex-1 flex flex-col justify-between">
+          <div>
+            <!-- TÍTULO MÁS GRANDE Y DESTACADO EN MARRÓN CAOBA OSCURO -->
+            <h2 id="detail-title" class="font-black text-xl text-[#291307] leading-tight tracking-tight mb-3">---</h2>
+            
+            <!-- CAMPO AUTOR DEDICADO -->
+            <div class="mb-4 bg-amber-50/70 p-2.5 rounded-xl border border-amber-200">
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-orange-700 flex items-center gap-1">
+                <i class="fa-solid fa-feather text-[10px]"></i> Autor / Autores:
+              </span>
+              <p id="detail-author" class="text-sm font-bold text-[#451a03] mt-0.5">---</p>
+            </div>
+
+            <!-- CAMPO EJEMPLARES DISPONIBLES (READ ONLY PARA USUARIOS GENERALES) -->
+            <div class="bg-amber-50/90 p-3 rounded-xl border border-amber-200">
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-[#78350f] block mb-1">Disponibilidad en Biblioteca:</span>
+              <div id="detail-copies-container" class="flex items-center gap-2">
+                <!-- Dynamically filled -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAMPO SINOPSIS DEDICADO Y SEPARADO -->
+      <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-200 mb-4 max-h-48 overflow-y-auto">
+        <p class="text-[10px] font-extrabold text-orange-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-align-left text-[10px]"></i> Sinopsis / Resumen del libro:
+        </p>
+        <p id="detail-synopsis" class="text-xs text-[#291307] leading-relaxed italic">Sin sinopsis disponible para este libro.</p>
+      </div>
+
+      <!-- CAMPO ABIESWEB (COLUMNA G - SÓLO VISIBLE PARA ADMINISTRADOR) -->
+      <div id="detail-abiesweb-container" class="hidden mb-4 bg-orange-50 border border-orange-300/70 p-3 rounded-xl flex items-center justify-between shadow-sm">
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-orange-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-laptop-code text-xs text-orange-600"></i> Código Abiesweb (Columna G - Solo Admin):
+          </span>
+          <p id="detail-abiesweb" class="text-xs font-mono font-bold text-[#451a03] mt-1">---</p>
+        </div>
+        <span class="text-[10px] bg-orange-200/80 text-orange-900 font-extrabold px-2 py-0.5 rounded border border-orange-300">Gestión</span>
+      </div>
+
+      <button onclick="closeDetailModal()" class="w-full py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-extrabold rounded-xl shadow-md transition-colors">
+        Cerrar Vista
+      </button>
+    </div>
+  </div>
+
+  <!-- 3.5. ADMIN LOGIN PIN MODAL -->
+  <div id="modal-admin-login" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="modal-content glass-panel w-full max-w-xs p-5 bg-white border border-amber-200 shadow-2xl rounded-2xl relative text-center text-[#291307]">
+      <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xl">
+        <i class="fa-solid fa-user-shield"></i>
+      </div>
+      <h3 class="font-bold text-base text-[#291307] mb-1">Acceso de Gestión</h3>
+      <p class="text-xs text-[#78350f] mb-4">Introduce la clave de administrador para desbloquear el escáner y la edición.</p>
+
+      <form onsubmit="submitAdminPin(event)" class="space-y-3">
+        <input type="password" id="admin-pin-input" placeholder="Clave (ej. 1234)" autocomplete="off" class="w-full py-2.5 px-3 text-center bg-amber-50 border border-amber-300 rounded-xl text-[#291307] font-mono text-base tracking-widest focus:outline-none focus:border-orange-500">
+        <div class="flex gap-2">
+          <button type="button" onclick="closeAdminLoginModal()" class="w-1/2 py-2.5 bg-amber-100 hover:bg-amber-200 text-[#78350f] font-bold rounded-xl text-xs">
+            Cancelar
+          </button>
+          <button type="submit" class="w-1/2 py-2.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-extrabold rounded-xl text-xs shadow-md">
+            Ingresar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 4. GOOGLE SHEETS SETTINGS & SETUP WIZARD MODAL -->
+  <div id="modal-config" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="modal-content glass-panel w-full max-w-lg p-5 bg-white border border-amber-200 shadow-2xl rounded-2xl max-h-[90vh] overflow-y-auto relative text-[#291307]">
+      <div class="flex items-center justify-between mb-4 border-b border-amber-200 pb-3">
+        <h3 class="font-bold text-base text-[#291307] flex items-center gap-2">
+          <i class="fa-solid fa-file-excel text-emerald-600"></i> Configurar Google Sheets
+        </h3>
+        <button onclick="closeConfigModal()" class="w-8 h-8 rounded-full bg-amber-100 text-[#78350f] hover:text-black flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs text-[#291307]">
+        <p>Conecta esta PWA directamente con tu Hoja de Cálculo de Google para sincronizar en tiempo real el inventario de lotes.</p>
+
+        <div class="bg-amber-50/70 p-3 rounded-xl border border-amber-200 space-y-2">
+          <label class="block font-bold text-[#291307] text-xs">URL de la Web App (Google Apps Script):</label>
+          <input type="url" id="sheet-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full py-2 px-3 bg-white border border-amber-300 rounded-lg text-[#291307] text-xs focus:outline-none focus:border-orange-500 font-mono">
+          <p class="text-[11px] text-[#78350f]">Deja en blanco para utilizar el modo local de demostración.</p>
+        </div>
+
+        <!-- ACCORDION FOR SCRIPT CODE & INSTRUCTIONS -->
+        <details class="bg-amber-50/60 rounded-xl border border-amber-200 p-3">
+          <summary class="font-bold text-orange-700 cursor-pointer flex items-center justify-between">
+            <span><i class="fa-solid fa-code mr-1"></i> Ver código Google Apps Script e instrucciones</span>
+            <i class="fa-solid fa-chevron-down text-xs"></i>
+          </summary>
+          <div class="mt-3 space-y-2 text-[11px] text-[#291307]">
+            <ol class="list-decimal pl-4 space-y-1">
+              <li>Abre tu Google Sheet en el navegador.</li>
+              <li>Ve al menú: <b>Extensiones &gt; Apps Script</b>.</li>
+              <li>Pega el código generado a continuación.</li>
+              <li>Haz clic en <b>Desplegar &gt; Nuevo despliegue &gt; Aplicación web</b>.</li>
+              <li>En <i>Quién tiene acceso</i> elige: <b>Cualquier persona (Anyone)</b>.</li>
+              <li>Copia la URL resultante y pégala arriba.</li>
+            </ol>
+            <div class="mt-2">
+              <button onclick="copyGasScriptCode()" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded text-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-copy"></i> Copiar Código Apps Script
+              </button>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="mt-5 flex gap-2">
+        <button onclick="saveSheetConfig()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-floppy-disk"></i> Guardar y Sincronizar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none w-11/12 max-w-sm"></div>
+
+  <!-- Main JavaScript File -->
+  <script src="app.js"></script>
+
+  <!-- Register Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW registrado con éxito:', reg.scope))
+          .catch(err => console.warn('SW fallo al registrar:', err));
+      });
+    }
+  </script>
+</body>
+</html>
