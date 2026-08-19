@@ -39,13 +39,12 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network first for APIs, cache fallback for static assets
-  if (event.request.url.includes('googleapis.com') || 
-      event.request.url.includes('openlibrary.org') || 
-      event.request.url.includes('script.google.com')) {
-    return; // Pass through to network directly
+  // 1. Ignorar peticiones que no sean http o https (extensiones de Chrome)
+  if (!event.request.url.startsWith('http')) {
+    return;
   }
 
+  // 2. Lógica de caché y red
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request).then((fetchRes) => {
@@ -55,12 +54,12 @@ self.addEventListener('fetch', (event) => {
           }
           return fetchRes;
         });
-      }).catch(() => {
-        // Fallback for offline if not cached
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
       });
+    }).catch(() => {
+      // Fallback por si no hay conexión a internet
+      if (event.request.mode === 'navigate') {
+        return caches.match('./index.html');
+      }
     })
   );
 });
