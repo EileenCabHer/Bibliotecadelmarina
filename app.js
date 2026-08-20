@@ -111,7 +111,7 @@ function initApp() {
 }
 
 function loadSheetConfig() {
-  const savedUrl = localStorage.getItem(STORAGE_KEYS.SHEET_URL) || '';
+  const savedUrl = localStorage.getItem(STORAGE_KEYS.SHEET_URL) || DEFAULT_SHEET_URL;
   document.getElementById('sheet-url-input').value = savedUrl;
   updateStatusPill(savedUrl);
 }
@@ -131,7 +131,7 @@ function updateStatusPill(url) {
 
 // Load Books from Google Sheet or LocalStorage seed
 async function loadBooksData() {
-  const sheetUrl = localStorage.getItem(STORAGE_KEYS.SHEET_URL);
+  const sheetUrl = localStorage.getItem(STORAGE_KEYS.SHEET_URL) || DEFAULT_SHEET_URL;
 
   if (sheetUrl && sheetUrl.startsWith('http')) {
     await fetchBooksFromSheet();
