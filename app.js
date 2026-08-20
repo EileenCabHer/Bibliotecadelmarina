@@ -825,3 +825,13 @@ function escapeHtml(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
+// Forzar la ejecución del renderizado y actualización de contadores al cargar la página
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    if (typeof fetchBooksFromSheet === 'function') {
+      fetchBooksFromSheet();
+    } else if (typeof renderCatalog === 'function') {
+      renderCatalog();
+    }
+  }, 500);
+});
