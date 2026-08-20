@@ -21,9 +21,12 @@ let isAdmin = false; // Default: Public Consulta Mode
 const ADMIN_PIN = '1234';
 const DEFAULT_COVER_IMAGE = 'default-cover.png';
 
+https://script.google.com/macros/s/AKfycbw4ZbixLX_ITKcqGe9hKUMIJkbc4NXL52wxJ4kKjKHGY2J24Huc3Po4F8bL7pMDvY2h/exec
+const DEFAULT_SHEET_URL = 'https://script.google.com/macros/s/TU_URL_REAL_DE_GOOGLE_AQUI/exec';
+
 const STORAGE_KEYS = {
   SHEET_URL: 'BIBLIO_SHEET_URL_V1',
-  LOCAL_BOOKS: 'BIBLIO_LOCAL_BOOKS_V3' // Version 3 for clean cache refresh
+  LOCAL_BOOKS: 'BIBLIO_LOCAL_BOOKS_V3'
 };
 
 // Seed sample books for immediate out-of-the-box experience
