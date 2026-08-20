@@ -108,7 +108,8 @@ function initApp() {
 }
 
 function loadSheetConfig() {
-  const savedUrl = localStorage.getItem(STORAGE_KEYS.SHEET_URL) || 'https://script.google.com/macros/s/AKfycbw4ZbixLX_ITKcqGe9hKUMIJkbc4NXL52wxJ4kKjKHGY2J24Huc3Po4F8bL7pMDvY2h/exec';
+  // Aquí está el cambio: usa STORAGE_KEYS.SHEET_URL en lugar de DEFAULT_SHEET_URL
+  const savedUrl = localStorage.getItem('BIBLIO_SHEET_URL_V1') || STORAGE_KEYS.SHEET_URL;
   document.getElementById('sheet-url-input').value = savedUrl;
   updateStatusPill(savedUrl);
 }
