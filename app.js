@@ -640,6 +640,7 @@ function renderCatalog() {
 
 function filterCatalog() {
   renderCatalog();
+  updateStatsSummary();
 }
 
 async function changeBookCopies(rowId, delta) {
@@ -681,10 +682,12 @@ function updateStatsSummary() {
   const totalTitles = booksState.length;
   const totalCopies = booksState.reduce((sum, b) => sum + Number(b.ejemplares || 1), 0);
 
-  document.getElementById('stat-total-titles').textContent = totalTitles;
-  document.getElementById('stat-total-copies').textContent = totalCopies;
-}
+  const titlesEl = document.getElementById('stat-total-titles');
+  if (titlesEl) titlesEl.textContent = totalTitles;
 
+  const copiesEl = document.getElementById('stat-total-copies');
+  if (copiesEl) copiesEl.textContent = totalCopies;
+}
 
 // ================= CLEAN PUBLIC BOOK DETAIL VIEW =================
 function openDetailModal(rowId) {
@@ -836,4 +839,10 @@ document.addEventListener("DOMContentLoaded", () => {
       renderCatalog();
     }
   }, 500);
+});
+// Forzar la actualización de estadísticas al cargar la página
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    updateStatsSummary();
+  }, 800);
 });
