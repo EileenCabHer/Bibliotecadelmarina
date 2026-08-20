@@ -26,6 +26,8 @@ const STORAGE_KEYS = {
   LOCAL_BOOKS: 'BIBLIO_LOCAL_BOOKS_V3' // Version 3 for clean cache refresh
 };
 
+const DEFAULT_SHEET_URL = STORAGE_KEYS.SHEET_URL;
+
 // Seed sample books for immediate out-of-the-box experience
 const SEED_BOOKS = [
   {
