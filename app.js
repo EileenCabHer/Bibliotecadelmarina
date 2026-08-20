@@ -22,7 +22,7 @@ const ADMIN_PIN = '1234';
 const DEFAULT_COVER_IMAGE = 'default-cover.png';
 
 const STORAGE_KEYS = {
-  SHEET_URL: 'https://script.google.com/macros/s/AQUÍ_TU_URL_DE_GOOGLE/exec', // <--- Pón tu URL real aquí entre comillas
+  SHEET_URL: 'https://script.google.com/macros/s/AKfycbw4ZbixLX_ITKcqGe9hKUMIJkbc4NXL52wxJ4kKjKHGY2J24Huc3Po4F8bL7pMDvY2h/exec', // <--- Pón tu URL real aquí entre comillas
   LOCAL_BOOKS: 'BIBLIO_LOCAL_BOOKS_V3' // Version 3 for clean cache refresh
 };
 
