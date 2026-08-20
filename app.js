@@ -131,25 +131,18 @@ function updateStatusPill(url) {
 
 // Load Books from Google Sheet or LocalStorage seed
 async function loadBooksData() {
-  const sheetUrl = localStorage.getItem(STORAGE_KEYS.SHEET_URL) || DEFAULT_SHEET_URL;
+  // Forzamos directamente tu URL fija de STORAGE_KEYS
+  const sheetUrl = STORAGE_KEYS.SHEET_URL;
 
   if (sheetUrl && sheetUrl.startsWith('http')) {
-    await fetchBooksFromSheet();
-  } else {
-    const localData = localStorage.getItem(STORAGE_KEYS.LOCAL_BOOKS);
-    if (localData) {
-      try {
-        const parsed = JSON.parse(localData);
-        booksState = Array.isArray(parsed) ? parsed.map(normalizeBook) : SEED_BOOKS;
-      } catch (e) {
-        booksState = SEED_BOOKS;
-      }
-    } else {
-      booksState = SEED_BOOKS;
-      saveLocalBooks();
+    try {
+      await fetchBooksFromSheet();
+    } catch (err) {
+      console.error("Error al conectar con la hoja:", err);
+      renderCatalog();
     }
+  } else {
     renderCatalog();
-    updateStatsSummary();
   }
 }
 
@@ -159,36 +152,20 @@ function saveLocalBooks() {
 
 // Fetch from Google Apps Script GET endpoint
 async function fetchBooksFromSheet() {
-  // Forzamos que coja la URL fija si el almacenamiento está vacío
-  const sheetUrl = localStorage.getItem(STORAGE_KEYS.SHEET_URL) || DEFAULT_SHEET_URL;
-  if (!sheetUrl) return;
-
-  showToast('🔄 Sincronizando con Google Sheets...', 'info');
-
+  // Le indicamos explícitamente que use tu URL fija
+  const sheetUrl = STORAGE_KEYS.SHEET_URL;
+  
   try {
-    const res = await fetch(sheetUrl);
-    const data = await res.json();
-
+    const response = await fetch(sheetUrl);
+    const data = await response.json();
+    
     if (data.status === 'success' && Array.isArray(data.books)) {
       booksState = data.books.map(normalizeBook);
-      saveLocalBooks();
       renderCatalog();
-      updateStatsSummary();
-      showToast('✅ Sincronización completada', 'success');
-      document.getElementById('stat-last-sync').textContent = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-    } else {
-      throw new Error(data.message || 'Respuesta inválida');
+      showToast('📚 Libros cargados correctamente desde Google Sheets', 'success');
     }
-  } catch (err) {
-    console.warn('Error al leer de Google Sheets:', err);
-    showToast('⚠️ No se pudo conectar a Google Sheets. Usando datos locales.', 'warning');
-    const localData = localStorage.getItem(STORAGE_KEYS.LOCAL_BOOKS);
-    if (localData) {
-      const parsed = JSON.parse(localData);
-      booksState = Array.isArray(parsed) ? parsed.map(normalizeBook) : SEED_BOOKS;
-    }
-    renderCatalog();
-    updateStatsSummary();
+  } catch (error) {
+    console.error("Error en fetchBooksFromSheet:", error);
   }
 }
 
