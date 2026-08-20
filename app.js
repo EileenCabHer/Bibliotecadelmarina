@@ -159,7 +159,8 @@ function saveLocalBooks() {
 
 // Fetch from Google Apps Script GET endpoint
 async function fetchBooksFromSheet() {
-  const sheetUrl = localStorage.getItem(STORAGE_KEYS.SHEET_URL);
+  // Forzamos que coja la URL fija si el almacenamiento está vacío
+  const sheetUrl = localStorage.getItem(STORAGE_KEYS.SHEET_URL) || DEFAULT_SHEET_URL;
   if (!sheetUrl) return;
 
   showToast('🔄 Sincronizando con Google Sheets...', 'info');
