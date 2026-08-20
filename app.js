@@ -152,7 +152,6 @@ function saveLocalBooks() {
 
 // Fetch from Google Apps Script GET endpoint
 async function fetchBooksFromSheet() {
-  // Le indicamos explícitamente que use tu URL fija
   const sheetUrl = STORAGE_KEYS.SHEET_URL;
   
   try {
@@ -160,7 +159,11 @@ async function fetchBooksFromSheet() {
     const data = await response.json();
     
     if (data.status === 'success' && Array.isArray(data.books)) {
-      booksState = data.books.map(normalizeBook);
+      // Mapeamos y filtramos para descartar la fila de cabecera de Google Sheets
+      booksState = data.books
+        .map(normalizeBook)
+        .filter(b => b.titulo && b.titulo !== 'Títulos' && b.titulo !== 'Título' && b.isbn !== 'ISBN');
+      
       renderCatalog();
       showToast('📚 Libros cargados correctamente desde Google Sheets', 'success');
     }
@@ -168,7 +171,6 @@ async function fetchBooksFromSheet() {
     console.error("Error en fetchBooksFromSheet:", error);
   }
 }
-
 
 // ================= ROLE MANAGEMENT (CONSULTA vs ADMINISTRADOR) =================
 function handleAdminToggleClick() {
