@@ -680,13 +680,9 @@ async function changeBookCopies(rowId, delta) {
 
 function updateStatsSummary() {
   const totalTitles = booksState.length;
-  const totalCopies = booksState.reduce((sum, b) => sum + Number(b.ejemplares || 1), 0);
-
+ 
   const titlesEl = document.getElementById('stat-total-titles');
   if (titlesEl) titlesEl.textContent = totalTitles;
-
-  const copiesEl = document.getElementById('stat-total-copies');
-  if (copiesEl) copiesEl.textContent = totalCopies;
 }
 
 // ================= CLEAN PUBLIC BOOK DETAIL VIEW =================
