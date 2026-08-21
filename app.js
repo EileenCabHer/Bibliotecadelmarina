@@ -682,7 +682,9 @@ function updateStatsSummary() {
   const totalTitles = booksState.length;
  
   const titlesEl = document.getElementById('stat-total-titles');
-  if (titlesEl) titlesEl.textContent = totalTitles;
+  if (titlesEl) {
+    titlesEl.textContent = totalTitles;
+  }
 }
 
 // ================= CLEAN PUBLIC BOOK DETAIL VIEW =================
