@@ -165,6 +165,7 @@ async function fetchBooksFromSheet() {
         .filter(b => b.titulo && b.titulo !== 'Títulos' && b.titulo !== 'Título' && b.isbn !== 'ISBN');
       
       renderCatalog();
+      updateStatsSummary();
       showToast('📚 Libros cargados correctamente desde Google Sheets', 'success');
     }
   } catch (error) {
